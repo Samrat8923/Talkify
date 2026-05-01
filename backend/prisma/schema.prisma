@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               String    @id @default(uuid())
+  username         String    @unique
+  email            String    @unique
+  password_hash    String
+  avatar_url       String?
+  is_online        Boolean   @default(false)
+  is_banned        Boolean   @default(false)
+  role             String    @default("user")
+  created_at       DateTime  @default(now())
+  
+  messages_sent     Message[] @relation("MessageSender")
+  messages_received Message[] @relation("MessageReceiver")
+  
+  channel_memberships ChannelMember[]
+  
+  conversations_as_user1 Conversation[] @relation("ConversationUser1")
+  conversations_as_user2 Conversation[] @relation("ConversationUser2")
+  
+  sent_requests     MessageRequest[] @relation("RequestSender")
+  received_requests MessageRequest[] @relation("RequestReceiver")
+}
+
+model Channel {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  is_private  Boolean   @default(false)
+  created_by  String    @default("system")
+  created_at  DateTime  @default(now())
+  
+  messages    Message[]
+  members     ChannelMember[]
+}
+
+model ChannelMember {
+  id         String   @id @default(uuid())
+  role       String   @default("member")
+  joined_at  DateTime @default(now())
+
+  user_id    String
+  user       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  channel_id String
+  channel    Channel  @relation(fields: [channel_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, channel_id])
+}
+
+model Conversation {
+  id         String   @id @default(uuid())
+  created_at DateTime @default(now())
+
+  user1_id   String
+  user1      User     @relation("ConversationUser1", fields: [user1_id], references: [id], onDelete: Cascade)
+
+  user2_id   String
+  user2      User     @relation("ConversationUser2", fields: [user2_id], references: [id], onDelete: Cascade)
+
+  @@unique([user1_id, user2_id])
+}
+
+model Message {
+  id          String    @id @default(uuid())
+  content     String?
+  file_url    String?
+  is_edited   Boolean   @default(false)
+  created_at  DateTime  @default(now())
+
+  sender_id   String
+  sender      User      @relation("MessageSender", fields: [sender_id], references: [id])
+
+  channel_id  String?
+  channel     Channel?  @relation(fields: [channel_id], references: [id])
+
+  receiver_id String?
+  receiver    User?     @relation("MessageReceiver", fields: [receiver_id], references: [id])
+}
+
+model MessageRequest {
+  id          String   @id @default(uuid())
+  status      String   @default("pending") // pending, accepted, rejected
+  created_at  DateTime @default(now())
+
+  sender_id   String
+  sender      User     @relation("RequestSender", fields: [sender_id], references: [id], onDelete: Cascade)
+
+  receiver_id String
+  receiver    User     @relation("RequestReceiver", fields: [receiver_id], references: [id], onDelete: Cascade)
+
+  @@unique([sender_id, receiver_id])
+}
