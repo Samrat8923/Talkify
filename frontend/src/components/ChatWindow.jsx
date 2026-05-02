@@ -74,14 +74,21 @@ const ChatWindow = ({ activeChannel, activeUser, onMenuClick, onBackClick, onCha
     if (!socket) return;
 
     const handleNewMessage = (message) => {
-      console.log('New message received via socket:', message);
-      if (activeChannel && message.channel_id === activeChannel.id) {
-        setMessages(prev => [...prev, message]);
-      } else if (activeUser && (
-        (message.sender_id === activeUser.id && message.receiver_id === user.id) ||
-        (message.sender_id === user.id && message.receiver_id === activeUser.id)
-      )) {
-        setMessages(prev => [...prev, message]);
+      console.log('Received message via socket:', message);
+      
+      const isRelevant = (activeChannel && message.channel_id === activeChannel.id) || 
+                        (activeUser && (
+                          (message.sender_id === activeUser.id && message.receiver_id === user.id) ||
+                          (message.sender_id === user.id && message.receiver_id === activeUser.id)
+                        ));
+
+      if (isRelevant) {
+        setMessages(prev => {
+          // Prevent duplicates (e.g. from optimistic update + socket event)
+          const exists = prev.find(m => m.id === message.id);
+          if (exists) return prev;
+          return [...prev, message];
+        });
       }
     };
     const handleDeleteMessage = ({ messageId }) => {
@@ -193,7 +200,14 @@ const ChatWindow = ({ activeChannel, activeUser, onMenuClick, onBackClick, onCha
     if (file) formData.append('file', file);
     try {
       console.log('Sending message...', { content, channelId: activeChannel?.id, receiverId: activeUser?.id });
-      await api.post('/api/messages', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      const res = await api.post('/api/messages', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      
+      // Optimistic Update: Immediately add the response to UI
+      setMessages(prev => {
+        const exists = prev.find(m => m.id === res.data.id);
+        if (exists) return prev;
+        return [...prev, res.data];
+      });
     } catch (err) {
       console.error('Failed to send message', err);
     }
