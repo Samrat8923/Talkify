@@ -25,7 +25,7 @@ const GroupInfoPanel = ({ channel, onClose, onChannelLeft, onChannelDeleted }) =
     if (!inviteSearch.trim()) { setInviteResults([]); return; }
     const timer = setTimeout(async () => {
       try {
-        const res = await api.get(`/users/search?q=${inviteSearch}`);
+        const res = await api.get(`/api/users/search?q=${inviteSearch}`);
         // Filter out already-members
         const memberIds = channelInfo?.members?.map(m => m.user_id) || [];
         setInviteResults(res.data.filter(u => !memberIds.includes(u.id)));
@@ -37,7 +37,7 @@ const GroupInfoPanel = ({ channel, onClose, onChannelLeft, onChannelDeleted }) =
   const fetchChannelInfo = async () => {
     setLoading(true);
     try {
-      const res = await api.get(`/channels/${channel.id}/info`);
+      const res = await api.get(`/api/channels/${channel.id}/info`);
       setChannelInfo(res.data);
     } catch (err) {
       console.error('Failed to fetch channel info', err);
@@ -51,7 +51,7 @@ const GroupInfoPanel = ({ channel, onClose, onChannelLeft, onChannelDeleted }) =
   const handleLeave = async () => {
     if (!window.confirm('Are you sure you want to leave this channel?')) return;
     try {
-      await api.post(`/channels/${channel.id}/leave`);
+      await api.post(`/api/channels/${channel.id}/leave`);
       onChannelLeft(channel.id);
       navigate('/');
       onClose();
@@ -63,7 +63,7 @@ const GroupInfoPanel = ({ channel, onClose, onChannelLeft, onChannelDeleted }) =
   const handleDelete = async () => {
     if (!window.confirm(`Permanently delete #${channel.name}? This cannot be undone.`)) return;
     try {
-      await api.delete(`/channels/${channel.id}`);
+      await api.delete(`/api/channels/${channel.id}`);
       onChannelDeleted(channel.id);
       navigate('/');
       onClose();
@@ -75,7 +75,7 @@ const GroupInfoPanel = ({ channel, onClose, onChannelLeft, onChannelDeleted }) =
   const handleInvite = async (targetUser) => {
     setActionLoading(`invite-${targetUser.id}`);
     try {
-      await api.post(`/channels/${channel.id}/invite`, { userId: targetUser.id });
+      await api.post(`/api/channels/${channel.id}/invite`, { userId: targetUser.id });
       await fetchChannelInfo();
       setInviteSearch('');
       setInviteResults([]);
@@ -90,7 +90,7 @@ const GroupInfoPanel = ({ channel, onClose, onChannelLeft, onChannelDeleted }) =
     if (!window.confirm('Remove this member?')) return;
     setActionLoading(`remove-${memberId}`);
     try {
-      await api.delete(`/channels/${channel.id}/members/${memberId}`);
+      await api.delete(`/api/channels/${channel.id}/members/${memberId}`);
       await fetchChannelInfo();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to remove member');
@@ -103,7 +103,7 @@ const GroupInfoPanel = ({ channel, onClose, onChannelLeft, onChannelDeleted }) =
     if (!window.confirm('Promote this user to admin?')) return;
     setActionLoading(`promote-${memberId}`);
     try {
-      await api.put(`/channels/${channel.id}/members/${memberId}/promote`);
+      await api.put(`/api/channels/${channel.id}/members/${memberId}/promote`);
       await fetchChannelInfo();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to promote member');

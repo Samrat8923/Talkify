@@ -35,13 +35,13 @@ const SettingsModal = ({ isOpen, onClose }) => {
       if (avatarFile) {
         const formData = new FormData();
         formData.append('file', avatarFile);
-        await api.put('/profile/avatar', formData, {
+        await api.put('/api/profile/avatar', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
       }
 
       if (username !== user?.username) {
-        await api.put('/profile/update', { username });
+        await api.put('/api/profile/update', { username });
       }
 
       setMessage({ type: 'success', text: 'Profile updated successfully. Refresh to see changes.' });
@@ -58,7 +58,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
     setMessage({ type: '', text: '' });
 
     try {
-      await api.put('/profile/password', { currentPassword, newPassword });
+      await api.put('/api/profile/password', { currentPassword, newPassword });
       setMessage({ type: 'success', text: 'Password updated successfully.' });
       setCurrentPassword('');
       setNewPassword('');

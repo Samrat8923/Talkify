@@ -130,9 +130,9 @@ const sendMessage = async (req, res) => {
     if (channelId) {
       io.to(channelId).emit('new_message', message);
     } else if (receiverId) {
-      // True private messaging: emit only to receiver and sender rooms
-      io.to(receiverId).emit('new_private_message', message);
-      io.to(req.user.id).emit('new_private_message', message);
+      // True private messaging: emit to receiver and sender rooms
+      io.to(receiverId).emit('new_message', message);
+      io.to(req.user.id).emit('new_message', message);
     }
 
     res.status(201).json(message);

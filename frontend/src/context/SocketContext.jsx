@@ -11,7 +11,10 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (user) {
       const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
-      const newSocket = io(socketUrl);
+      const newSocket = io(socketUrl, {
+        transports: ['websocket', 'polling'],
+        withCredentials: true,
+      });
       
       newSocket.on('connect', () => {
         newSocket.emit('user_online', user.id);

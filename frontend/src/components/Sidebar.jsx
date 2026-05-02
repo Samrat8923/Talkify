@@ -42,7 +42,7 @@ const Sidebar = ({ setActiveChannel, setActiveUser, onChannelDeleted }) => {
 
   const fetchChannels = useCallback(async () => {
     try {
-      const res = await api.get('/channels');
+      const res = await api.get('/api/channels');
       setChannels(res.data);
       return res.data;
     } catch (err) {
@@ -53,7 +53,7 @@ const Sidebar = ({ setActiveChannel, setActiveUser, onChannelDeleted }) => {
 
   const fetchConversations = useCallback(async () => {
     try {
-      const res = await api.get('/users/conversations');
+      const res = await api.get('/api/users/conversations');
       setConversations(res.data);
       return res.data;
     } catch (err) {
@@ -64,7 +64,7 @@ const Sidebar = ({ setActiveChannel, setActiveUser, onChannelDeleted }) => {
 
   const fetchPublicChannels = useCallback(async () => {
     try {
-      const res = await api.get('/channels/public');
+      const res = await api.get('/api/channels/public');
       setPublicChannels(res.data);
     } catch (err) {
       console.error('Failed to fetch public channels', err);
@@ -73,7 +73,7 @@ const Sidebar = ({ setActiveChannel, setActiveUser, onChannelDeleted }) => {
 
   const fetchRequests = useCallback(async () => {
     try {
-      const res = await api.get('/requests');
+      const res = await api.get('/api/requests');
       setRequests(res.data);
     } catch (err) {
       console.error('Failed to fetch requests', err);
@@ -127,7 +127,7 @@ const Sidebar = ({ setActiveChannel, setActiveUser, onChannelDeleted }) => {
     });
     
     // Listen for new messages to update the conversations list automatically
-    socket.on('new_private_message', () => {
+    socket.on('new_message', () => {
       fetchConversations();
     });
 
@@ -170,7 +170,7 @@ const Sidebar = ({ setActiveChannel, setActiveUser, onChannelDeleted }) => {
     const timer = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const res = await api.get(`/users/search?q=${dmSearch}`);
+        const res = await api.get(`/api/users/search?q=${dmSearch}`);
         setDmSearchResults(res.data);
       } catch (err) {
         console.error('Search failed', err);
@@ -183,7 +183,7 @@ const Sidebar = ({ setActiveChannel, setActiveUser, onChannelDeleted }) => {
 
   const handleStartChat = async (targetUser) => {
     try {
-      await api.post('/users/conversations', { userId: targetUser.id });
+      await api.post('/api/users/conversations', { userId: targetUser.id });
       await fetchConversations();
       setDmSearch('');
       setDmSearchResults([]);
@@ -197,7 +197,7 @@ const Sidebar = ({ setActiveChannel, setActiveUser, onChannelDeleted }) => {
     e.preventDefault();
     if (!newChannelName.trim()) return;
     try {
-      const res = await api.post('/channels', {
+      const res = await api.post('/api/channels', {
         name: newChannelName,
         is_private: isPrivateChannel
       });
@@ -213,7 +213,7 @@ const Sidebar = ({ setActiveChannel, setActiveUser, onChannelDeleted }) => {
 
   const handleJoinPublicChannel = async (channel) => {
     try {
-      const res = await api.post(`/channels/${channel.id}/join`);
+      const res = await api.post(`/api/channels/${channel.id}/join`);
       setChannels(prev => [...prev, res.data]);
       setPublicChannels(prev => prev.filter(c => c.id !== channel.id));
       setIsDiscoverOpen(false);

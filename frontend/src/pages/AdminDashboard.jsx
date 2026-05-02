@@ -24,10 +24,10 @@ const AdminDashboard = () => {
     setLoading(true);
     try {
       if (activeTab === 'users') {
-        const res = await api.get('/admin/users');
+        const res = await api.get('/api/admin/users');
         setUsers(res.data);
       } else {
-        const res = await api.get('/admin/messages');
+        const res = await api.get('/api/admin/messages');
         setMessages(res.data);
       }
     } catch (error) {
@@ -40,7 +40,7 @@ const AdminDashboard = () => {
   const handleDeleteUser = async (id) => {
     if (!window.confirm("Are you sure you want to delete this user? This will delete all their messages.")) return;
     try {
-      await api.delete(`/admin/user/${id}`);
+      await api.delete(`/api/admin/user/${id}`);
       setUsers(users.filter(u => u.id !== id));
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to delete user');
@@ -49,7 +49,7 @@ const AdminDashboard = () => {
 
   const handleToggleBan = async (id) => {
     try {
-      const res = await api.put(`/admin/user/${id}/ban`);
+      const res = await api.put(`/api/admin/user/${id}/ban`);
       setUsers(users.map(u => u.id === id ? { ...u, is_banned: res.data.user.is_banned } : u));
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to toggle ban status');
@@ -59,7 +59,7 @@ const AdminDashboard = () => {
   const handleDeleteMessage = async (id) => {
     if (!window.confirm("Are you sure you want to delete this message?")) return;
     try {
-      await api.delete(`/admin/message/${id}`);
+      await api.delete(`/api/admin/message/${id}`);
       setMessages(messages.filter(m => m.id !== id));
     } catch (error) {
       alert(error.response?.data?.message || 'Failed to delete message');

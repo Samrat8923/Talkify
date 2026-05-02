@@ -35,9 +35,10 @@ const ChatWindow = ({ activeChannel, activeUser, onMenuClick, onBackClick, onCha
   const fetchMessages = useCallback(async () => {
     if (!isMember && activeChannel) { setMessages([]); return; }
     try {
-      let url = '/messages?';
+      let url = '/api/messages?';
       if (activeChannel) url += `channelId=${activeChannel.id}`;
       else if (activeUser) url += `receiverId=${activeUser.id}`;
+      console.log(`Fetching messages from: ${url}`);
       const res = await api.get(url);
       setMessages(res.data);
     } catch (error) {
@@ -50,7 +51,7 @@ const ChatWindow = ({ activeChannel, activeUser, onMenuClick, onBackClick, onCha
   const fetchRequestStatus = useCallback(async () => {
     if (!activeUser) return;
     try {
-      const res = await api.get(`/requests/status/${activeUser.id}`);
+      const res = await api.get(`/api/requests/status/${activeUser.id}`);
       setRequestStatus(res.data.status);
       setRequestId(res.data.requestId);
       setIsRequestSender(res.data.isSender);
@@ -73,12 +74,10 @@ const ChatWindow = ({ activeChannel, activeUser, onMenuClick, onBackClick, onCha
     if (!socket) return;
 
     const handleNewMessage = (message) => {
+      console.log('New message received via socket:', message);
       if (activeChannel && message.channel_id === activeChannel.id) {
         setMessages(prev => [...prev, message]);
-      }
-    };
-    const handleNewPrivateMessage = (message) => {
-      if (activeUser && (
+      } else if (activeUser && (
         (message.sender_id === activeUser.id && message.receiver_id === user.id) ||
         (message.sender_id === user.id && message.receiver_id === activeUser.id)
       )) {
@@ -108,7 +107,6 @@ const ChatWindow = ({ activeChannel, activeUser, onMenuClick, onBackClick, onCha
     };
 
     socket.on('new_message', handleNewMessage);
-    socket.on('new_private_message', handleNewPrivateMessage);
     socket.on('delete_message', handleDeleteMessage);
     socket.on('edit_message', handleEditMessage);
     socket.on('user_typing', handleTyping);
@@ -118,7 +116,6 @@ const ChatWindow = ({ activeChannel, activeUser, onMenuClick, onBackClick, onCha
 
     return () => {
       socket.off('new_message', handleNewMessage);
-      socket.off('new_private_message', handleNewPrivateMessage);
       socket.off('delete_message', handleDeleteMessage);
       socket.off('edit_message', handleEditMessage);
       socket.off('user_typing', handleTyping);
@@ -135,7 +132,7 @@ const ChatWindow = ({ activeChannel, activeUser, onMenuClick, onBackClick, onCha
   const handleJoinChannel = async () => {
     setIsJoining(true);
     try {
-      const res = await api.post(`/channels/${activeChannel.id}/join`);
+      const res = await api.post(`/api/channels/${activeChannel.id}/join`);
       onRefreshSidebar?.();
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to join channel');
@@ -147,7 +144,7 @@ const ChatWindow = ({ activeChannel, activeUser, onMenuClick, onBackClick, onCha
   const handleSendRequest = async () => {
     setIsRequesting(true);
     try {
-      const res = await api.post('/requests', { receiverId: activeUser.id });
+      const res = await api.post('/api/requests', { receiverId: activeUser.id });
       setRequestStatus('pending');
       setRequestId(res.data.id);
       setIsRequestSender(true);
@@ -161,7 +158,7 @@ const ChatWindow = ({ activeChannel, activeUser, onMenuClick, onBackClick, onCha
   const handleCancelRequest = async () => {
     setIsRequesting(true);
     try {
-      await api.delete(`/requests/${requestId}`);
+      await api.delete(`/api/requests/${requestId}`);
       setRequestStatus('none');
       setRequestId(null);
     } catch (err) {
@@ -174,7 +171,7 @@ const ChatWindow = ({ activeChannel, activeUser, onMenuClick, onBackClick, onCha
   const handleRespondRequest = async (action) => {
     setIsRequesting(true);
     try {
-      await api.put(`/requests/${requestId}`, { action });
+      await api.put(`/api/requests/${requestId}`, { action });
       if (action === 'accept') {
         setRequestStatus('accepted');
         onRefreshSidebar?.();
@@ -195,7 +192,8 @@ const ChatWindow = ({ activeChannel, activeUser, onMenuClick, onBackClick, onCha
     if (activeUser) formData.append('receiverId', activeUser.id);
     if (file) formData.append('file', file);
     try {
-      await api.post('/messages', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      console.log('Sending message...', { content, channelId: activeChannel?.id, receiverId: activeUser?.id });
+      await api.post('/api/messages', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
     } catch (err) {
       console.error('Failed to send message', err);
     }
@@ -228,7 +226,7 @@ const ChatWindow = ({ activeChannel, activeUser, onMenuClick, onBackClick, onCha
   const handleSaveEdit = async () => {
     if (!editingMessage || !editContent.trim()) return;
     try {
-      await api.put(`/messages/${editingMessage.id}`, { content: editContent });
+      await api.put(`/api/messages/${editingMessage.id}`, { content: editContent });
       setEditingMessage(null);
       setEditContent('');
     } catch (err) {
@@ -239,7 +237,7 @@ const ChatWindow = ({ activeChannel, activeUser, onMenuClick, onBackClick, onCha
   const handleDeleteMessage = async () => {
     if (!contextMenu?.messageId) return;
     try {
-      await api.delete(`/messages/${contextMenu.messageId}`);
+      await api.delete(`/api/messages/${contextMenu.messageId}`);
     } catch (err) {
       console.error('Failed to delete message', err);
     }

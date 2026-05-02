@@ -14,8 +14,9 @@ const broadcastActiveUsers = () => {
 const initSocket = (server) => {
   io = new Server(server, {
     cors: {
-      origin: '*', // For development
-      methods: ['GET', 'POST']
+      origin: process.env.FRONTEND_URL || '*',
+      methods: ['GET', 'POST'],
+      credentials: true
     }
   });
 
