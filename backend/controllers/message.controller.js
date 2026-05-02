@@ -195,7 +195,12 @@ const deleteMessage = async (req, res) => {
     });
 
     const io = getIo();
-    io.emit('delete_message', { messageId, channelId: message.channel_id });
+    if (message.channel_id) {
+      io.to(message.channel_id).emit('delete_message', { messageId });
+    } else {
+      io.to(message.sender_id).emit('delete_message', { messageId });
+      io.to(message.receiver_id).emit('delete_message', { messageId });
+    }
 
     res.status(200).json({ message: 'Message deleted successfully' });
   } catch (error) {

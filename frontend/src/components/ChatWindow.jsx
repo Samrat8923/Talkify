@@ -250,10 +250,17 @@ const ChatWindow = ({ activeChannel, activeUser, onMenuClick, onBackClick, onCha
 
   const handleDeleteMessage = async () => {
     if (!contextMenu?.messageId) return;
+    const messageId = contextMenu.messageId;
+    
+    // Optimistic Update
+    setMessages(prev => prev.filter(m => m.id !== messageId));
+    
     try {
-      await api.delete(`/api/messages/${contextMenu.messageId}`);
+      await api.delete(`/api/messages/${messageId}`);
     } catch (err) {
       console.error('Failed to delete message', err);
+      // Optional: re-fetch if delete fails
+      fetchMessages();
     }
     closeContextMenu();
   };
