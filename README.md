@@ -55,4 +55,5 @@ A Slack-like real-time chat and collaboration web application built with modern 
    ```
 
 ## Usage
-Open the application in your browser (usually `http://localhost:5173`). Register multiple users in different tabs or incognito windows to test real-time features!
+Open the application in your browser (usually `http://localhost:5173`). Register multiple users in different tabs or incognito windows to test real-time features! Also you can see the deployed version https://talkify-sable.vercel.app/
+
